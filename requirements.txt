@@ -1,0 +1,6 @@
+Flask
+flask-cors
+python-dotenv
+pypdf
+firebase-admin
+requests
