@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayan AI</title>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         FIREBASE AUTH UI
+    ====================================================== -->
+
+    <div id="authSection">
+
+        <h2>🔐 Sign in to Sayan AI</h2>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Email"
+            style="padding:10px; width:250px;"
+        >
+
+        <br><br>
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            style="padding:10px; width:250px;"
+        >
+
+        <br><br>
+
+        <button id="loginBtn">Sign In</button>
+        <button id="signupBtn">Create Account</button>
+
+        <p id="authMessage"></p>
+
+    </div>
+
+
+    <!-- =====================================================
+         SAYAN AI
+    ====================================================== -->
+
+    <h1>🤖 Sayan AI</h1>
+
+    <p>
+        Understand your documents. Complete forms with confidence.
+    </p>
+
+    <hr>
+
+
+    <!-- =====================================================
+         DOCUMENT UPLOAD
+    ====================================================== -->
+
+    <h2>📄 Upload Your Document</h2>
+
+    <input
+        type="file"
+        id="document"
+        accept=".pdf"
+    >
+
+    <br><br>
+
+    <button onclick="analyzeDocument()">
+        Analyze with Sayan AI
+    </button>
+
+    <div id="result"></div>
+
+
+    <!-- =====================================================
+         CHAT
+    ====================================================== -->
+
+    <hr>
+
+    <h2>💬 Ask Sayan AI</h2>
+
+    <input
+        type="text"
+        id="question"
+        placeholder="Ask something about your document..."
+        style="width:70%; padding:10px;"
+    >
+
+    <button onclick="askSayan()">
+        Ask
+    </button>
+
+    <div
+        id="chatResult"
+        style="margin-top:20px;"
+    ></div>
+
+
+    <!-- =====================================================
+         FIREBASE
+    ====================================================== -->
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+
+        // =====================================================
+        // FIREBASE CONFIG
+        // =====================================================
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsD6ye4QPRtZuPOWc_9P0cRpzbl-QZXrg",
+            authDomain: "sayan-ai.firebaseapp.com",
+            projectId: "sayan-ai",
+            storageBucket: "sayan-ai.firebasestorage.app",
+            messagingSenderId: "670111837390",
+            appId: "1:670111837390:web:448ae57075b1420967749f"
+        };
+
+
+        // =====================================================
+        // INITIALIZE FIREBASE
+        // =====================================================
+
+        const app = initializeApp(firebaseConfig);
+
+        const auth = getAuth(app);
+
+        const db = getFirestore(app);
+
+
+        // Make Firebase Auth available to normal JS functions
+        window.firebaseAuth = auth;
+
+
+        // =====================================================
+        // SIGN UP
+        // =====================================================
+
+        document
+            .getElementById("signupBtn")
+            .addEventListener("click", async () => {
+
+                const email =
+                    document.getElementById("email").value;
+
+                const password =
+                    document.getElementById("password").value;
+
+                const message =
+                    document.getElementById("authMessage");
+
+
+                try {
+
+                    await createUserWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+                    message.innerText =
+                        "✅ Account created successfully!";
+
+                } catch (error) {
+
+                    message.innerText =
+                        "❌ " + error.message;
+                }
+
+            });
+
+
+        // =====================================================
+        // SIGN IN
+        // =====================================================
+
+        document
+            .getElementById("loginBtn")
+            .addEventListener("click", async () => {
+
+                const email =
+                    document.getElementById("email").value;
+
+                const password =
+                    document.getElementById("password").value;
+
+                const message =
+                    document.getElementById("authMessage");
+
+
+                try {
+
+                    await signInWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+                    message.innerText =
+                        "✅ Signed in successfully!";
+
+                } catch (error) {
+
+                    message.innerText =
+                        "❌ " + error.message;
+                }
+
+            });
+
+
+        // =====================================================
+        // SAVE ANALYSIS TO FIRESTORE
+        // =====================================================
+
+        window.saveAnalysisToFirestore =
+            async function(filename, analysis) {
+
+                const user = auth.currentUser;
+
+
+                if (!user) {
+
+                    console.log(
+                        "No signed-in user. Analysis not saved."
+                    );
+
+                    return;
+                }
+
+
+                console.log(
+                    "SAYAN USER UID:",
+                    user.uid
+                );
+
+
+                try {
+
+                    await addDoc(
+                        collection(
+                            db,
+                            "users",
+                            user.uid,
+                            "interactions"
+                        ),
+                        {
+                            filename: filename,
+                            analysis: analysis,
+                            createdAt: serverTimestamp()
+                        }
+                    );
+
+
+                    console.log(
+                        "✅ Analysis saved to Firestore"
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Firestore save error:",
+                        error
+                    );
+                }
+            };
+
+    </script>
+
+
+    <!-- =====================================================
+         SAYAN AI FUNCTIONS
+         Normal JavaScript
+    ====================================================== -->
+
+    <script>
+
+        // =====================================================
+        // ANALYZE DOCUMENT
+        // =====================================================
+
+        async function analyzeDocument() {
+
+            const file =
+                document.getElementById("document").files[0];
+
+            const result =
+                document.getElementById("result");
+
+
+            // Check file
+
+            if (!file) {
+
+                result.innerHTML =
+                    "<p>⚠️ Please select a PDF first.</p>";
+
+                return;
+            }
+
+
+            // Check Firebase login
+
+            const user =
+                window.firebaseAuth?.currentUser;
+
+
+            if (!user) {
+
+                result.innerHTML =
+                    "<p>🔐 Please sign in first.</p>";
+
+                return;
+            }
+
+
+            result.innerHTML =
+                "<p>🤖 Sayan AI is analyzing your document...</p>";
+
+
+            try {
+
+                // Get Firebase ID token
+
+                const idToken =
+                    await user.getIdToken();
+
+
+                console.log(
+                    "✅ Firebase token obtained"
+                );
+
+
+                // Prepare PDF
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+
+                // Send PDF + Firebase token
+
+                const response =
+                    await fetch(
+                        "http://127.0.0.1:5000/analyze",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Authorization":
+                                    "Bearer " + idToken
+                            },
+
+                            body: formData
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                // Backend error
+
+                if (data.error) {
+
+                    result.innerHTML =
+                        `<p>❌ ${data.error}</p>`;
+
+                    return;
+                }
+
+
+                // Display result
+
+                result.innerHTML = `
+                    <h3>🤖 Sayan AI Analysis</h3>
+
+                    <h4>📄 ${data.filename}</h4>
+
+                    <hr>
+
+                    <pre style="
+                        white-space: pre-wrap;
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                    ">${data.analysis}</pre>
+                `;
+
+
+                // Save to Firestore
+
+                if (
+                    data.analysis &&
+                    window.saveAnalysisToFirestore
+                ) {
+
+                    await window.saveAnalysisToFirestore(
+                        data.filename,
+                        data.analysis
+                    );
+                }
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                result.innerHTML = `
+                    <p>❌ Could not connect to Sayan AI.</p>
+                    <p>Make sure the Flask backend is running.</p>
+                `;
+            }
+
+        }
+
+
+        // =====================================================
+        // CHAT
+        // =====================================================
+
+        async function askSayan() {
+
+            const question =
+                document.getElementById("question").value;
+
+            const chatResult =
+                document.getElementById("chatResult");
+
+
+            if (!question.trim()) {
+
+                chatResult.innerHTML =
+                    "<p>⚠️ Please enter a question.</p>";
+
+                return;
+            }
+
+
+            // Check login
+
+            const user =
+                window.firebaseAuth?.currentUser;
+
+
+            if (!user) {
+
+                chatResult.innerHTML =
+                    "<p>🔐 Please sign in first.</p>";
+
+                return;
+            }
+
+
+            chatResult.innerHTML =
+                "<p>🤖 Sayan AI is thinking...</p>";
+
+
+            // Use analysis as document context
+
+            const analysis =
+                document
+                    .querySelector("#result pre")
+                    ?.innerText || "";
+
+
+            if (!analysis) {
+
+                chatResult.innerHTML =
+                    "<p>⚠️ Analyze a document first.</p>";
+
+                return;
+            }
+
+
+            try {
+
+                const idToken =
+                    await user.getIdToken();
+
+
+                const response =
+                    await fetch(
+                        "http://127.0.0.1:5000/chat",
+                        {
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "Authorization":
+                                    "Bearer " + idToken
+                            },
+
+                            body: JSON.stringify({
+
+                                document: analysis,
+
+                                question: question
+
+                            })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (data.error) {
+
+                    chatResult.innerHTML =
+                        "<p>❌ " +
+                        data.error +
+                        "</p>";
+
+                    return;
+                }
+
+
+                chatResult.innerHTML = `
+                    <p>
+                        <strong>🤖 Sayan AI:</strong>
+                    </p>
+
+                    <p style="white-space: pre-wrap;">
+                        ${data.answer}
+                    </p>
+                `;
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                chatResult.innerHTML =
+                    "<p>❌ Could not connect to Sayan AI.</p>";
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
