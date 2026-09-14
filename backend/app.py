@@ -34,8 +34,8 @@ CORS(app)
 
 @app.route("/")
 def home():
-    return send_from_directory("../frontend", "index.html") 
-
+    frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    return send_from_directory(frontend_path, "index.html")
 
 # ============================================================
 # HEALTH
