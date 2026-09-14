@@ -131,11 +131,17 @@
         // =====================================================
 
         const firebaseConfig = {
-            apiKey: "AIzaSyAsD6ye4QPRtZuPOWc_9P0cRpzbl-QZXrg",
+
+            apiKey: "AIzaSyAsD6ye4QPRtZuPOWc9_...",
+
             authDomain: "sayan-ai.firebaseapp.com",
+
             projectId: "sayan-ai",
+
             storageBucket: "sayan-ai.firebasestorage.app",
+
             messagingSenderId: "670111837390",
+
             appId: "1:670111837390:web:448ae57075b1420967749f"
         };
 
@@ -152,6 +158,7 @@
 
 
         // Make Firebase Auth available to normal JS functions
+
         window.firebaseAuth = auth;
 
 
@@ -267,9 +274,13 @@
                             "interactions"
                         ),
                         {
+
                             filename: filename,
+
                             analysis: analysis,
+
                             createdAt: serverTimestamp()
+
                         }
                     );
 
@@ -365,11 +376,14 @@
                 );
 
 
-                // Send PDF + Firebase token
+                // =================================================
+                // SEND PDF + FIREBASE TOKEN
+                // IMPORTANT: SAME-ORIGIN RENDER URL
+                // =================================================
 
                 const response =
                     await fetch(
-                        "http://127.0.0.1:5000/analyze",
+                        "/analyze",
                         {
                             method: "POST",
 
@@ -401,6 +415,7 @@
                 // Display result
 
                 result.innerHTML = `
+
                     <h3>🤖 Sayan AI Analysis</h3>
 
                     <h4>📄 ${data.filename}</h4>
@@ -412,6 +427,7 @@
                         font-family: Arial, sans-serif;
                         line-height: 1.6;
                     ">${data.analysis}</pre>
+
                 `;
 
 
@@ -426,6 +442,7 @@
                         data.filename,
                         data.analysis
                     );
+
                 }
 
 
@@ -434,9 +451,13 @@
                 console.error(error);
 
                 result.innerHTML = `
+
                     <p>❌ Could not connect to Sayan AI.</p>
+
                     <p>Make sure the Flask backend is running.</p>
+
                 `;
+
             }
 
         }
@@ -506,9 +527,14 @@
                     await user.getIdToken();
 
 
+                // =================================================
+                // CHAT REQUEST
+                // IMPORTANT: SAME-ORIGIN RENDER URL
+                // =================================================
+
                 const response =
                     await fetch(
-                        "http://127.0.0.1:5000/chat",
+                        "/chat",
                         {
                             method: "POST",
 
@@ -519,6 +545,7 @@
 
                                 "Authorization":
                                     "Bearer " + idToken
+
                             },
 
                             body: JSON.stringify({
@@ -528,6 +555,7 @@
                                 question: question
 
                             })
+
                         }
                     );
 
@@ -548,6 +576,7 @@
 
 
                 chatResult.innerHTML = `
+
                     <p>
                         <strong>🤖 Sayan AI:</strong>
                     </p>
@@ -555,6 +584,7 @@
                     <p style="white-space: pre-wrap;">
                         ${data.answer}
                     </p>
+
                 `;
 
 
@@ -564,6 +594,7 @@
 
                 chatResult.innerHTML =
                     "<p>❌ Could not connect to Sayan AI.</p>";
+
             }
 
         }
