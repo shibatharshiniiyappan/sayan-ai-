@@ -356,8 +356,40 @@
 
                 // Get Firebase ID token
 
-                const idToken =
-                    await user.getIdToken();
+                let idToken;
+
+
+
+                try {
+
+
+                    idToken = await user.getIdToken();
+
+
+                } catch (tokenError) {
+
+
+                    console.error("Firebase token error:", tokenError);
+
+
+
+                    result.innerHTML = `
+
+
+                        <p>❌ Firebase Login Error</p>
+
+
+                        <p>${tokenError.message || tokenError}</p>
+
+
+                    `;
+
+
+
+                    return;
+
+
+                }
 
 
                 console.log(
@@ -447,18 +479,13 @@
 
 
             } catch (error) {
+                    console.error("Chat error:", error);
 
-                console.error(error);
-
-                result.innerHTML = `
-
-                    <p>❌ Could not connect to Sayan AI.</p>
-
-                    <p>Make sure the Flask backend is running.</p>
-
-                `;
-
-            }
+                    chatResult.innerHTML = `
+                        <p>❌ Sayan AI Error</p>
+                        <p>${error.message || error}</p>
+                    `;
+                }
 
         }
 
@@ -523,9 +550,22 @@
 
             try {
 
-                const idToken =
-                    await user.getIdToken();
+                let idToken;
 
+                try {
+                    idToken = await user.getIdToken();
+                } catch (tokenError) {
+                    console.error("Firebase token error:", tokenError);
+
+                    chatResult.innerHTML =
+                        `<p>❌ Firebase Login Error</p>
+                         <p>${tokenError.message || tokenError}</p>`;
+
+                    return;
+                }
+
+                const formData =
+                    new FormData();
 
                 // =================================================
                 // CHAT REQUEST
