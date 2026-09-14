@@ -1,13 +1,11 @@
 import os
 import requests
 import firebase_admin
-
 from firebase_admin import credentials, auth
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from pypdf import PdfReader
 from flask_cors import CORS
 from dotenv import load_dotenv
-
 
 # Load environment variables
 load_dotenv()
@@ -36,10 +34,7 @@ CORS(app)
 
 @app.route("/")
 def home():
-    return jsonify({
-        "message": "Welcome to Sayan AI!",
-        "status": "Backend is running"
-    })
+    return send_from_directory("../frontend", "index.html") 
 
 
 # ============================================================
