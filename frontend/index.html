@@ -588,15 +588,14 @@
                 `;
 
 
-            } catch (error) {
+} catch (error) {
+   console.error("Analyze error:", error);
 
-                console.error(error);
-
-                chatResult.innerHTML =
-                    "<p>❌ Could not connect to Sayan AI.</p>";
-
-            }
-
+   result.innerHTML = `
+     <p>❌ Sayan AI Error</p>
+     <p>${error.message || error}</p>
+   `;
+}
         }
 
     </script>
