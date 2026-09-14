@@ -14,7 +14,14 @@ load_dotenv()
 
 
 # Firebase Admin
-cred = credentials.Certificate("firebase-service-account.json")
+import base64
+import json
+
+firebase_json = base64.b64decode(
+    os.environ["FIREBASE_SERVICE_ACCOUNT_BASE64"]
+).decode("utf-8")
+
+cred = credentials.Certificate(json.loads(firebase_json))
 firebase_admin.initialize_app(cred)
 
 
