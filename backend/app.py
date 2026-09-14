@@ -15,13 +15,19 @@ load_dotenv()
 import base64
 import json
 
-firebase_json = base64.b64decode(
-    os.environ["FIREBASE_SERVICE_ACCOUNT_BASE64"]
-).decode("utf-8")
+if os.getenv("FIREBASE_SERVICE_ACCOUNT_BASE64"):
+    import base64
+    import json
 
-cred = credentials.Certificate(json.loads(firebase_json))
+    firebase_json = base64.b64decode(
+        os.environ["FIREBASE_SERVICE_ACCOUNT_BASE64"]
+    ).decode("utf-8")
+
+    cred = credentials.Certificate(json.loads(firebase_json))
+else:
+    cred = credentials.Certificate("firebase-service-account.json")
+
 firebase_admin.initialize_app(cred)
-
 
 # Flask
 app = Flask(__name__)
